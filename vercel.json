@@ -25,7 +25,9 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/index.html",
+      "methods": ["GET"],
+      "status": 200
     }
   ]
 }
