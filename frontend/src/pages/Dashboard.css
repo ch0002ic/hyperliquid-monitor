@@ -1,0 +1,14 @@
+.dashboard__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dashboard__header h1 {
+  margin: 0;
+}
+
+.dashboard__header p {
+  margin: var(--space-xs) 0 0;
+  color: var(--text-muted);
+}

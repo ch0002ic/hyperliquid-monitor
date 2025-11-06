@@ -1,0 +1,44 @@
+:root {
+  --surface-app: #0e1116;
+  --surface-panel: #151a21;
+  --surface-control: #1c232c;
+  --text-primary: #f5f6f8;
+  --text-muted: #8a93a1;
+  --border-subtle: #1f2731;
+  --border-stronger: #2b3644;
+  --accent-primary: #5b7cfa;
+  --accent-primary-strong: #4866d0;
+  --success: #4caf7d;
+  --success-soft: rgba(76, 175, 125, 0.1);
+  --danger: #ff6b6b;
+  --danger-soft: rgba(255, 107, 107, 0.1);
+  --info-soft: rgba(91, 124, 250, 0.12);
+  --info-border: rgba(91, 124, 250, 0.4);
+  --shadow-sm: 0 10px 30px rgba(0, 0, 0, 0.2);
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 0.75rem;
+  --space-lg: 1rem;
+  --space-xl: 1.5rem;
+  --space-xxl: 2rem;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  background: var(--surface-app);
+  color: var(--text-primary);
+}
+
+button,
+select,
+input,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+}

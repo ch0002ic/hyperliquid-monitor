@@ -1,0 +1,70 @@
+.fills-list {
+  background: var(--surface-panel);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-subtle);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.fills-list__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.fills-list__header span {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.fills-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-md);
+}
+
+.fills-list__item {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  background: var(--surface-control);
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.fills-list__item > div:first-child {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.fills-list__side {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.fills-list__side--buy {
+  color: var(--success);
+}
+
+.fills-list__side--sell {
+  color: var(--danger);
+}
+
+.fills-list__details {
+  display: flex;
+  gap: var(--space-lg);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.fills-list__hash {
+  font-family: 'Fira Code', 'SFMono-Regular', ui-monospace, monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  word-break: break-all;
+}

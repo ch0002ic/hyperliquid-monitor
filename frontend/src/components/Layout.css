@@ -1,0 +1,28 @@
+.layout {
+  min-height: 100vh;
+  background: var(--surface-app);
+  color: var(--text-primary);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.layout__header {
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-panel);
+  padding: var(--space-lg);
+}
+
+.layout__main {
+  padding: var(--space-xl);
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.layout__footer {
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-panel);
+  padding: var(--space-md) var(--space-xl);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}

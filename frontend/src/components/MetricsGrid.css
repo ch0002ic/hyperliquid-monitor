@@ -1,0 +1,33 @@
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xxl);
+}
+
+.metrics-grid__card {
+  background: var(--surface-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.metrics-grid__card h3 {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.metrics-grid__value {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: var(--space-sm) 0;
+  color: var(--text-primary);
+}
+
+.metrics-grid__hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}

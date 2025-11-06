@@ -1,0 +1,10 @@
+@import url('./styles/theme.css');
+
+* {
+  box-sizing: border-box;
+}
+
+#root {
+  min-height: 100vh;
+  display: contents;
+}

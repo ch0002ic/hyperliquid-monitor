@@ -1,0 +1,43 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Runtime secrets
+backend/.env
+*.env
+*.env.*
+
+# Logs and coverage
+*.log
+.pytest_cache/
+.coverage
+htmlcov/
+logs/
+
+
+# Deployment
+.vercel/
+
+

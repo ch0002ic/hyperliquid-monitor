@@ -1,0 +1,31 @@
+.status-banner {
+  border-radius: var(--radius-md);
+  padding: var(--space-md) var(--space-lg);
+  margin-bottom: var(--space-lg);
+  border: 1px solid transparent;
+}
+
+.status-banner h4 {
+  margin: 0;
+  margin-bottom: var(--space-xs);
+}
+
+.status-banner p {
+  margin: 0;
+  color: var(--text-muted);
+}
+
+.status-banner--info {
+  background: var(--info-soft);
+  border-color: var(--info-border);
+}
+
+.status-banner--error {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+}
+
+.status-banner--success {
+  background: var(--success-soft);
+  border-color: var(--success);
+}
