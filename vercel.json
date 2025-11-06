@@ -6,8 +6,8 @@
       "use": "@vercel/static-build",
       "config": {
         "distDir": "dist",
-        "installCommand": "npm install --prefix frontend",
-        "buildCommand": "rm -rf dist && npm run build --prefix frontend && cp -R frontend/dist dist"
+        "installCommand": "npm install",
+        "buildCommand": "npm run build"
       }
     },
     {
@@ -25,9 +25,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html",
-      "methods": ["GET"],
-      "status": 200
+      "dest": "/index.html"
     }
   ]
 }
