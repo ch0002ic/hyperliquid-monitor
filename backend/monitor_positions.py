@@ -16,10 +16,18 @@ from hyperliquid.info import Info
 from hyperliquid.utils.error import ClientError, ServerError
 
 try:
-    from backend.state_store import load_state_snapshot, save_state_snapshot
+    from backend.state_store import (
+        load_state_snapshot,
+        register_state_store_alert_handler,
+        save_state_snapshot,
+    )
 except ImportError:  # pragma: no cover - fallback when executed as a script
     sys.path.append(str(Path(__file__).resolve().parent.parent))
-    from backend.state_store import load_state_snapshot, save_state_snapshot
+    from backend.state_store import (
+        load_state_snapshot,
+        register_state_store_alert_handler,
+        save_state_snapshot,
+    )
 
 try:
     from dotenv import load_dotenv  # type: ignore
@@ -1006,6 +1014,34 @@ def send_telegram_message(message: str) -> bool:
     return False
 
 
+_STATE_STORE_ALERT_REGISTERED = False
+
+
+def _ensure_state_store_alerts() -> None:
+    global _STATE_STORE_ALERT_REGISTERED
+    if _STATE_STORE_ALERT_REGISTERED:
+        return
+
+    def _handle_state_store_alert(message: str) -> None:
+        logger.warning("State store alert: %s", message)
+        if TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID:
+            alert_text = f"⚠️ Redis state store issue\n{message}"
+            if send_telegram_message(alert_text):
+                logger.info("Dispatched Redis alert to Telegram")
+            else:
+                logger.error("Failed to dispatch Redis alert to Telegram")
+        else:
+            logger.error("Cannot dispatch Redis alert; Telegram credentials missing")
+
+    try:
+        register_state_store_alert_handler(_handle_state_store_alert)
+    except Exception as exc:  # pragma: no cover - defensive registration
+        logger.warning("Failed to register state store alert handler: %s", exc)
+        return
+
+    _STATE_STORE_ALERT_REGISTERED = True
+
+
 def _collect_wallet_updates(
     address: str,
     *,
@@ -1360,6 +1396,8 @@ def main() -> None:
     if not validate_config():
         logger.error("Configuration validation failed. Exiting.")
         return
+
+    _ensure_state_store_alerts()
 
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)

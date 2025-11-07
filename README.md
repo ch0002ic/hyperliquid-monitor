@@ -140,6 +140,8 @@ Recommended setup (free tier friendly):
 3. In Vercel, add the same `REDIS_URL` environment variable under **Settings → Environment Variables**.
 4. Restart the local monitor with `./.venv/bin/python backend/monitor_positions.py`. New fills and position updates now flow through Redis, so the hosted dashboard refresh sees them within the regular polling interval (15s by default).
 
+When Redis connectivity drops, the monitor raises a Telegram alert (same bot/chat as trade fills) so you can investigate and fail over before the dashboard goes stale.
+
 The Redis key defaults to `hyperliquid:position_state`. Override it by setting `STATE_REDIS_KEY` if you need to separate environments.
 
 ### Dry-Run Strategy Loop

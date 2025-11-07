@@ -6,7 +6,7 @@ import logging
 import os
 from pathlib import Path
 from threading import Lock
-from typing import Any, Dict
+from typing import Any, Callable, Dict, Optional, cast
 
 try:  # pragma: no cover - optional dependency when redis is unused
     import redis  # type: ignore
@@ -21,6 +21,10 @@ _STATE_LOCK = Lock()
 
 _REDIS_URL = os.getenv("STATE_REDIS_URL") or os.getenv("REDIS_URL") or os.getenv("UPSTASH_REDIS_URL")
 _REDIS_KEY = os.getenv("STATE_REDIS_KEY", "hyperliquid:position_state")
+
+AlertHandler = Callable[[str], None]
+_ALERT_HANDLER: Optional[AlertHandler] = None
+_REDIS_ALERT_FIRED = False
 
 
 def _get_redis_client():
@@ -37,6 +41,35 @@ def _get_redis_client():
 _REDIS_CLIENT = _get_redis_client()
 
 
+def register_state_store_alert_handler(handler: Optional[AlertHandler]) -> None:
+    """Register a callback invoked the first time Redis persistence fails."""
+
+    global _ALERT_HANDLER
+    _ALERT_HANDLER = handler
+
+
+def _notify_redis_issue(message: str) -> None:
+    global _REDIS_ALERT_FIRED
+    if not _REDIS_URL:
+        return
+    if not _ALERT_HANDLER:
+        return
+    if _REDIS_ALERT_FIRED:
+        return
+    try:
+        _ALERT_HANDLER(message)
+    except Exception as exc:  # pragma: no cover - defensive alert handling
+        logger.warning("State store alert handler failed: %s", exc)
+    finally:
+        _REDIS_ALERT_FIRED = True
+
+
+def _mark_redis_healthy() -> None:
+    global _REDIS_ALERT_FIRED
+    if _REDIS_ALERT_FIRED:
+        _REDIS_ALERT_FIRED = False
+
+
 def load_state_snapshot() -> Dict[str, Any]:
     """Retrieve the persisted position state.
 
@@ -48,9 +81,14 @@ def load_state_snapshot() -> Dict[str, Any]:
         try:
             payload = client.get(_REDIS_KEY)
             if payload:
-                return json.loads(payload)
+                text_payload = payload.decode("utf-8") if isinstance(payload, bytes) else cast(str, payload)
+                _mark_redis_healthy()
+                return json.loads(text_payload)
         except Exception as exc:  # pragma: no cover - network failure
             logger.warning("Failed to read state from Redis: %s", exc)
+            _notify_redis_issue(f"Redis read failed: {exc}")
+    elif _REDIS_URL:
+        _notify_redis_issue("Redis client unavailable; using local state snapshot")
 
     # Fall back to local JSON file
     with _STATE_LOCK:
@@ -72,8 +110,12 @@ def save_state_snapshot(state: Dict[str, Any]) -> None:
     if client is not None:
         try:
             client.set(_REDIS_KEY, serialized)
+            _mark_redis_healthy()
         except Exception as exc:  # pragma: no cover - network failure
             logger.warning("Failed to write state to Redis: %s", exc)
+            _notify_redis_issue(f"Redis write failed: {exc}")
+    elif _REDIS_URL:
+        _notify_redis_issue("Redis client unavailable; wrote state to local file only")
 
     with _STATE_LOCK:
         try:
