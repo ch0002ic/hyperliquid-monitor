@@ -1,6 +1,6 @@
 # Hyperliquid Momentum Trader
 
-This repository now focuses on the lightweight Hyperliquid trading backend.  It provides:
+This repository now focuses on the lightweight Hyperliquid trading backend. It provides:
 
 - A Telegram trade monitor that streams filled orders for any set of wallet addresses
 - A momentum-based live trading loop with configurable thresholds, size caps, and risk controls
@@ -46,7 +46,7 @@ HYPERLIQUID_VAULT_ADDRESS=""       # optional for subaccounts
 HYPERLIQUID_BASE_URL=""            # leave empty for mainnet
 ```
 
-> The CLI automatically loads `backend/.env`.  Secrets in the project root are no longer referenced.
+> The CLI automatically loads `backend/.env`. Secrets in the project root are no longer referenced.
 
 ### Frontend `.env`
 
@@ -58,12 +58,12 @@ VITE_API_BASE_URL="http://localhost:8000/api"
 
 ## Funding From OKX
 
-Live trades will fail with `Insufficient margin` unless your Hyperliquid account holds USDC collateral.  To fund it from an OKX wallet:
+Live trades will fail with `Insufficient margin` unless your Hyperliquid account holds USDC collateral. To fund it from an OKX wallet:
 
 1. Log in to [hyperliquid.xyz](https://hyperliquid.xyz) and open **Wallet → Deposit**.
 2. Select **Arbitrum One** (USDC) and copy the deposit address (it matches the wallet in `WALLET_ADDRESSES`).
-3. In OKX, withdraw USDC to that address using the same network (`Arbitrum One`).  Keep a small amount of ETH on Arbitrum for gas if you plan to move funds later.
-4. Wait for the bridge confirmations (typically 1–2 minutes).  Re-run the snippet below to confirm margin:
+3. In OKX, withdraw USDC to that address using the same network (`Arbitrum One`). Keep a small amount of ETH on Arbitrum for gas if you plan to move funds later.
+4. Wait for the bridge confirmations (typically 1–2 minutes). Re-run the snippet below to confirm margin:
 
    ```bash
    python - <<'PY'
@@ -129,6 +129,19 @@ Automatic deploys are configured with `vercel.json`. To ship every push on `main
 4. **Set environment variables** – add `VITE_API_BASE_URL=https://<your-vercel-domain>/api` on the **Production** and **Preview** tabs so the SPA calls the colocated API. Optionally set `API_ALLOWED_ORIGINS=https://<your-vercel-domain>` for stricter CORS.
 5. **Trigger deploys** – subsequent pushes to `main` (or configured branches) will build the React app from `frontend` and expose the FastAPI serverless function at `/api/*`.
 
+### Sharing Monitor State With Vercel
+
+`monitor_positions.py` now persists its JSON snapshot to both the local file system **and** an optional Redis instance. When `REDIS_URL` (or `STATE_REDIS_URL`) is present, the script writes state to that Redis key and the FastAPI API reads from the same source, which lets the Vercel deployment surface the live websocket feed.
+
+Recommended setup (free tier friendly):
+
+1. Provision [Upstash Redis](https://upstash.com). Copy the `UPSTASH_REDIS_URL` value.
+2. Set `REDIS_URL=<copied-url>` in `backend/.env` (or export it when launching the monitor).
+3. In Vercel, add the same `REDIS_URL` environment variable under **Settings → Environment Variables**.
+4. Restart the local monitor with `./.venv/bin/python backend/monitor_positions.py`. New fills and position updates now flow through Redis, so the hosted dashboard refresh sees them within the regular polling interval (15s by default).
+
+The Redis key defaults to `hyperliquid:position_state`. Override it by setting `STATE_REDIS_KEY` if you need to separate environments.
+
 ### Dry-Run Strategy Loop
 
 ```bash
@@ -175,7 +188,7 @@ python main.py \
 - **`Insufficient margin`** – deposit USDC into Hyperliquid or reduce `--hl-max-usd` until collateral is available.
 - **`Invalid price`** – tighten the `--hl-slippage` buffer; the trader places IOC limit orders at `mid_price * (1 ± slippage)`.
 - **Telegram failures** – verify bot + chat IDs and that the `.env` file is loaded before starting the monitor.
-- **Analytics disabled** – omit `--hl-analytics` if you prefer a minimal log.  With the flag enabled, rolling Sharpe and max drawdown per coin are logged each iteration.
+- **Analytics disabled** – omit `--hl-analytics` if you prefer a minimal log. With the flag enabled, rolling Sharpe and max drawdown per coin are logged each iteration.
 
 ## Next Steps
 

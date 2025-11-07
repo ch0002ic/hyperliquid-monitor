@@ -1,6 +1,5 @@
 from ast import literal_eval
 import hashlib
-import json
 import logging
 import os
 import signal
@@ -15,6 +14,12 @@ import requests
 import schedule
 from hyperliquid.info import Info
 from hyperliquid.utils.error import ClientError, ServerError
+
+try:
+    from backend.state_store import load_state_snapshot, save_state_snapshot
+except ImportError:  # pragma: no cover - fallback when executed as a script
+    sys.path.append(str(Path(__file__).resolve().parent.parent))
+    from backend.state_store import load_state_snapshot, save_state_snapshot
 
 try:
     from dotenv import load_dotenv  # type: ignore
@@ -33,7 +38,6 @@ MESSAGE_DELAY_SECONDS = 0.75
 MAX_RETRIES = 3
 RETRY_DELAY = 2
 API_TIMEOUT = 30
-STATE_FILE = Path(__file__).resolve().parent / "position_state.json"
 STATE_POSITIONS_KEY = "positions"
 STATE_META_KEY = "meta"
 STATE_META_COINS_KEY = "coins"
@@ -585,19 +589,15 @@ def format_position_message(
 
 def save_position_state(state: Dict[str, Dict[str, Any]]) -> None:
     try:
-        with STATE_FILE.open("w") as handle:
-            json.dump(state, handle)
-    except IOError as exc:
+        save_state_snapshot(state)
+    except Exception as exc:  # pragma: no cover - unexpected persistence failure
         logger.error("Error saving position state: %s", exc)
 
 
 def load_position_state() -> Dict[str, Dict[str, Any]]:
-    if not STATE_FILE.exists():
-        return {}
     try:
-        with STATE_FILE.open() as handle:
-            raw_state = json.load(handle)
-    except (json.JSONDecodeError, IOError) as exc:
+        raw_state = load_state_snapshot()
+    except Exception as exc:  # pragma: no cover - unexpected persistence failure
         logger.warning("Error loading position state: %s", exc)
         return {}
 
