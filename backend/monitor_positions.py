@@ -18,6 +18,7 @@ from hyperliquid.utils.error import ClientError, ServerError
 try:
     from backend.state_store import (
         load_state_snapshot,
+        refresh_state_store_configuration,
         register_state_store_alert_handler,
         save_state_snapshot,
     )
@@ -25,6 +26,7 @@ except ImportError:  # pragma: no cover - fallback when executed as a script
     sys.path.append(str(Path(__file__).resolve().parent.parent))
     from backend.state_store import (
         load_state_snapshot,
+        refresh_state_store_configuration,
         register_state_store_alert_handler,
         save_state_snapshot,
     )
@@ -108,6 +110,7 @@ def _parse_wallet_addresses(raw_value: str) -> List[str]:
 
 
 _load_env_file()
+refresh_state_store_configuration()
 
 TELEGRAM_BOT_TOKEN = _get_env_var("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = _get_env_var("TELEGRAM_CHAT_ID")

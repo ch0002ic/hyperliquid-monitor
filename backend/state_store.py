@@ -19,26 +19,26 @@ logger = logging.getLogger(__name__)
 _STATE_FILE = Path(__file__).resolve().parent / "position_state.json"
 _STATE_LOCK = Lock()
 
-_REDIS_URL = os.getenv("STATE_REDIS_URL") or os.getenv("REDIS_URL") or os.getenv("UPSTASH_REDIS_URL")
-_REDIS_KEY = os.getenv("STATE_REDIS_KEY", "hyperliquid:position_state")
+_REDIS_URL: Optional[str] = None
+_REDIS_KEY = "hyperliquid:position_state"
 
 AlertHandler = Callable[[str], None]
 _ALERT_HANDLER: Optional[AlertHandler] = None
 _REDIS_ALERT_FIRED = False
 
 
-def _get_redis_client():
-    if not _REDIS_URL or redis is None:
+def _get_redis_client(url: Optional[str]):
+    if not url or redis is None:
         return None
     try:
         # Upstash and most hosted Redis providers offer TLS URLs.
-        return redis.from_url(_REDIS_URL, decode_responses=True)
+        return redis.from_url(url, decode_responses=True)
     except Exception as exc:  # pragma: no cover - connection issues at import time
         logger.warning("Failed to initialise Redis client: %%s", exc)
         return None
 
 
-_REDIS_CLIENT = _get_redis_client()
+_REDIS_CLIENT = None
 
 
 def register_state_store_alert_handler(handler: Optional[AlertHandler]) -> None:
@@ -70,11 +70,36 @@ def _mark_redis_healthy() -> None:
         _REDIS_ALERT_FIRED = False
 
 
+def _configure_from_env() -> None:
+    global _REDIS_URL, _REDIS_KEY, _REDIS_CLIENT, _REDIS_ALERT_FIRED
+
+    env_url = os.getenv("STATE_REDIS_URL") or os.getenv("REDIS_URL") or os.getenv("UPSTASH_REDIS_URL")
+    env_key = os.getenv("STATE_REDIS_KEY", "hyperliquid:position_state")
+
+    url_changed = env_url != _REDIS_URL
+
+    _REDIS_URL = env_url
+    _REDIS_KEY = env_key
+
+    if url_changed:
+        _REDIS_CLIENT = _get_redis_client(_REDIS_URL)
+        _REDIS_ALERT_FIRED = False
+    elif _REDIS_CLIENT is None and _REDIS_URL:
+        _REDIS_CLIENT = _get_redis_client(_REDIS_URL)
+
+
+def refresh_state_store_configuration() -> None:
+    """Refresh Redis connection and key from current environment variables."""
+
+    _configure_from_env()
+
+
 def load_state_snapshot() -> Dict[str, Any]:
     """Retrieve the persisted position state.
 
     Preference order: Redis cache (if configured) then local JSON file.
     """
+    _configure_from_env()
     # Attempt remote cache first
     client = _REDIS_CLIENT
     if client is not None:
@@ -104,6 +129,8 @@ def load_state_snapshot() -> Dict[str, Any]:
 
 def save_state_snapshot(state: Dict[str, Any]) -> None:
     """Persist the latest position state to Redis and local disk (best effort)."""
+    _configure_from_env()
+
     serialized = json.dumps(state)
 
     client = _REDIS_CLIENT
